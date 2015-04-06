@@ -21,3 +21,6 @@ do
 done
 
 echo $(date +'%Y-%m-%d %H:%S')" Warmer finished..." >> /var/log/warmer.log
+
+# add to cron
+# 40 */3 * * * /opt/scripts/cachewarmer.sh > /dev/null 2>&1
