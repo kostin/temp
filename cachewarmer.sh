@@ -17,7 +17,7 @@ for LINE in $(cat /var/log/sitemap.xml);
 do
   START=$(date +%s%N | cut -b1-13)
   URL="${LINE}"
-  RES=$(/usr/bin/curl --silent --max-time 5 -IL "$URL")
+  RES=$(/usr/bin/curl --silent --max-time 10 --header "cache-purge: 1" -IL "$URL")
   STOP=$(date +%s%N | cut -b1-13)
   CODE=$(echo "${RES}" | grep -e 'HTTP' | tr -d '\n\r')
   HIT=$(echo "${RES}" | grep -e 'X-Nginx-Cache' | tr -d '\n\r')
