@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm -rf /usr/share/nginx/cache/fcgi/*
+#rm -rf /usr/share/nginx/cache/fcgi/*
 
 if [ ! -f /var/log/warmer.log ]; then
   touch /var/log/warmer.log
@@ -9,15 +9,20 @@ fi
 
 echo $(date +'%Y-%m-%d %H:%S')" Warmer starting..." >> /var/log/warmer.log
 
-/usr/bin/curl --silent  http://www.gssportng.s05.yazato.ru/sitemap.xml?cache=purge | egrep -o "http://$URL[^<\"> ]+" > /var/log/sitemap.xml
+/usr/bin/curl --silent  http://www.gssportng.s08.yazato.ru/sitemap.xml | egrep -o "http://$URL[^<\"> ]+" > /var/log/sitemap.xml
 
-for line in $(cat /var/log/sitemap.xml);
+echo $(date +'%Y-%m-%d %H:%S')" Warmer queue length is "$(cat /var/log/sitemap.xml | wc -l) >> /var/log/warmer.log
+
+for LINE in $(cat /var/log/sitemap.xml);
 do
-  url="${line}"
-  res=$(/usr/bin/curl -IL "$url")
-  code=$(echo "$res" | grep -e 'HTTP')
-  hit=$(echo "$res" | grep -e 'X-Nginx-Cache')
-  echo $(date +'%Y-%m-%d %H:%S')" Warming $url $hit" >> /var/log/warmer.log
+  START=$(date +%s%N | cut -b1-13)
+  URL="${LINE}"
+  RES=$(/usr/bin/curl --silent --max-time 5 -IL "$URL")
+  STOP=$(date +%s%N | cut -b1-13)
+  CODE=$(echo "$res" | grep -e 'HTTP' | tr -d '\n\r')
+  HIT=$(echo "$res" | grep -e 'X-Nginx-Cache' | tr -d '\n\r')
+  TIME=$((STOP-START))
+  echo $(date +'%Y-%m-%d %H:%S')" Warm ${URL} in ${TIME}ms ${CODE} ${HIT}" >> /var/log/warmer.log
 done
 
 echo $(date +'%Y-%m-%d %H:%S')" Warmer finished..." >> /var/log/warmer.log
